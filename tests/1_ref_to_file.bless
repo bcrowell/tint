@@ -1,0 +1,24 @@
+{
+  "1_ref_to_file": {
+    "text": [
+      [
+        "lit",
+        "The file 1_ref_to_file_2 contains what it contains.\n"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_ref_to_file_2": {
+    "text": [
+      [
+        "lit",
+        "what it contains.\n"
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

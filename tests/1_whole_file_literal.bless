@@ -1,0 +1,13 @@
+{
+  "1_whole_file_literal": {
+    "text": [
+      [
+        "lit",
+        "Hello, world.\n"
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

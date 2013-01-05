@@ -1,0 +1,8 @@
+*.pdf
+*~
+*.aux
+*.log
+*.idx
+*.toc
+*.ilg
+*.bak

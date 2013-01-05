@@ -1,0 +1,39 @@
+{
+  "1_lambda.f": {
+    "text": [
+      [
+        "lit",
+        "You will unexpectedly meet someone new"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_lambda.g": {
+    "text": [
+      [
+        "lit",
+        "Others admire your expertise"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_lambda.h": {
+    "text": [
+      [
+        "ref",
+        "fortune"
+      ],
+      [
+        "lit",
+        " in bed."
+      ]
+    ],
+    "args": [
+      "fortune"
+    ]
+  }
+}

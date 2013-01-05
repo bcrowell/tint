@@ -1,0 +1,35 @@
+{
+  "1_multiple_one_liners.a": {
+    "text": [
+      [
+        "lit",
+        "foo"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_multiple_one_liners.b": {
+    "text": [
+      [
+        "lit",
+        "bar"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_multiple_one_liners.c": {
+    "text": [
+      [
+        "lit",
+        "baz"
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "1_backslashed_dot.name": {
+    "text": [
+      [
+        "lit",
+        "Fred"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_backslashed_dot.greeting": {
+    "text": [
+      [
+        "lit",
+        "Hello, Fred."
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

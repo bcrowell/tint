@@ -1,0 +1,13 @@
+{
+  "1_newline_inside_one_liner.foo": {
+    "text": [
+      [
+        "lit",
+        "Roses are red.\nViolets are blue."
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}
