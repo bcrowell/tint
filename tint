@@ -311,12 +311,30 @@ def generate_code(dict,language)
       # $stderr.print c,"\n"
       p = %x{#{c}} # bug: how do you check for errors?
       perl = <<-"PERL"
+        use strict;
+        package Tint;
+        use base 'Exporter';
+        our @EXPORT_OK = ('tint');
         {
           my #{p} # evaluates to my $VAR1 = "...";, which is only evaluated the first time the function is called
           sub tint {
             my $key = shift;
+            my %args = @_;
             my $dict = $VAR1;
-            return $dict->{$key}->{'text'}->[0]->[1]; # fixme
+            my $t = $dict->{$key};
+            if (!defined $t) {return $t}
+            my $tt = $t->{'text'};
+            my $result = '';
+            foreach my $x(@$tt) {
+              my $type = $x->[0];
+              if ($type eq 'lit') {
+                $result = $result . $x->[1];
+              }
+              else {
+                $result = $result . tint($x->[0],%args);
+              }
+            }
+            return $result;
           }
         }
       PERL

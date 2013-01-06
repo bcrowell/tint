@@ -70,6 +70,11 @@ y = "James Bond"
 Here the \ before the . is needed because . is a legal character in variable names, and
 we didn't intend to refer to a variable called "`password.`".
 
+# perl interface
+
+    tint --generate="perl" sample >Tint.pm
+    perl -e 'use Tint 'tint'; print tint("sample.hello")'
+
 # To do
 
 If a filename ends in .tint, variables inside it should be named as if the .tint didn't exist.
@@ -78,5 +83,3 @@ Allow absolute rather than relative addressing with `$$top.to.bottom`. This is c
 implemented syntactically, but not semantically, and hasn't been tested syntactically.
 
 Descending into subdirectories is coded, but not tested.
-
-Perl output.
