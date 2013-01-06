@@ -86,25 +86,36 @@ def handle_text!(dict,node,dir,text)
   else 
     # more than one entry in file:
     handled = false
+    # ----- a single-line assignment -----
     if text=~/\A\s*(#{$key_pat})\s*=\s*<<([^\n]*)>>\s*([\s\S]*)/s then
       handled = true
       (k,v,rest) = [$1,$2,$3]
       v.gsub!(/(?<!\\)\\n/,"\n") # allow, e.g., foo=<<bar \n baz>>
       v = protect_dot(v)
-      merge_text_node!(dict,node+'.'+k,v)
-      process_node!(dict,node,dir,'text',rest)
+      merge_text_node!(dict,node+'.'+k,v) unless k=~/^__/
+      process_node!(dict,node,dir,'text',rest) if rest=~/<</
     end
+    # ----- a here doc -----
     if !handled && text=~/\A\s*(#{$key_pat})\s*=\s*<<([^\n]*)\n([\s\S]*)/s then
                 # [\s\S] means anything that is whitespace or isn't whitespace, i.e., any character.
                 # I don't understand why the /s doesn't allow me to do this with ., but it doesn't work.
-      # a here doc
       handled = true
       (k,terminator,rest) = [$1,$2,$3]
       x = rest.split(/(?<=\n)#{Regexp::quote(terminator)}/)
-      merge_text_node!(dict,node+'.'+k,protect_dot(x.shift))
-      process_node!(dict,node,dir,'text',x.join(terminator))
+      merge_text_node!(dict,node+'.'+k,protect_dot(x.shift)) unless k=~/^__/
+      rest = x.join(terminator) # we've shifted off the first element, so what's left in x is the rest of the file
+      process_node!(dict,node,dir,'text',rest) if rest=~/<</
     end
-    fatal_error("file with << not handled, text=#{text}=") if !handled
+    # ----- a comment -----
+    if !handled then
+      # If we get here, then we weren't able to parse the file using regexes like /\A\s*.../. That means
+      # the head of the file is a comment. However, it must contain a <<, because otherwise it would have been
+      # parsed as a whole-file definition.
+      comment = text.split(/#{$key_pat}\s*=\s*<</).shift # the leading comment; use split so the match isn't greedy
+      text =~ /\A#{Regexp::quote(comment)}([\s\S]*)\Z/ or die fatal_error("programming error in handle_text!, can't match comment??")
+      rest = $1
+      handle_text!(dict,node,dir,rest)
+    end
   end
 end
 
@@ -271,13 +282,13 @@ def merge_dicts(d1,d2)
     redefined.each { |x|
       j1 = JSON.generate(d1[x])
       j2 = JSON.generate(d2[x])
-    }
-    if j1!=j2 then # kludge, JSON may not be canonicalized
-      $stderr.print "key redefined: #{x}\n"
-      $stderr.print j1,"\n"
-      $stderr.print j2,"\n"
-      fatal_error("The following keys were multiply defined: #{redefined.to_a.join(' ')}")
+      if j1!=j2 then # kludge, JSON may not be canonicalized
+        $stderr.print "key redefined: #{x}\n"
+        $stderr.print j1,"\n"
+        $stderr.print j2,"\n"
+        fatal_error("The following keys were multiply defined: #{redefined.to_a.join(' ')}")
     end
+    }
   end
   return d1.merge(d2)
 end
@@ -338,6 +349,7 @@ def generate_code(dict,language)
             return $result;
           }
         }
+        1;
       PERL
       return perl
     ensure
@@ -346,6 +358,13 @@ def generate_code(dict,language)
     return result
   end
   fatal_error("Illegal language: #{language}")
+end
+
+def post_process!(dict)
+  strip_sigils!(dict)
+  dict.each { |k,v|
+    if k.split(/\./).last=~/^_/ then dict.delete(k) end
+  }
 end
 
 #========================================================================================================================
@@ -377,7 +396,7 @@ def main(opts_hash)
   }
 
   satisfy_refs(dict,base_dir)
-  strip_sigils!(dict)
+  post_process!(dict)
   print generate_code(dict,language)
 end
 

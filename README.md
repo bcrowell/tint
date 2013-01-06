@@ -57,6 +57,12 @@ In this syntax, one can use \n to put newlines in strings:
 
 y = "James Bond"
 
+The order in which strings are used and defined is not significant. The following
+file produces the same result as the one above:
+
+    y=<<James $x>>
+    x=<<Bond>>
+
 ## Interpolation from another file:
 
 *password*:
@@ -68,7 +74,23 @@ y = "James Bond"
     Don't tell anybody, but the password is $password\.
 
 Here the \ before the . is needed because . is a legal character in variable names, and
-we didn't intend to refer to a variable called "`password.`".
+we didn't intend to refer to a variable called "`password.`". The `\.` is read as `.`
+only this context; in any other context, it would be treated literally as `\.`.
+
+## Comments and internal variables:
+
+In a file defining multiple strings, any lines interspersed with the definitions are treated as comments.
+Variables beginning with a `_` can be referenced internally but are not visible in the compiled output;
+this reduces the size of the output, keeps the namespace uncluttered, and can be used to prevent the
+external use of something that is only meant to be used internally.
+By convention, a double underscore, `__`, is used for variables that we don't even intend to use
+internally, serving the same purpose as "commenting out" a definition.
+
+    This is a comment.
+    _x=<<spam>>
+    -- This is also a comment. The variable _x is not externally visible.
+    y=<<$_x $_x $_x $_x>>
+    ## Another comment. The variable y gets defined as "spam spam spam spam".
 
 # perl interface
 
