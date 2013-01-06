@@ -18,6 +18,7 @@ Files that are directories are silently ignored.
 require 'getoptlong'  # pickaxe book, p. 452
 require 'set' # http://www.ruby-doc.org/stdlib-1.9.3/libdoc/set/rdoc/Set.html
 require 'fileutils'
+require 'tempfile' 
 require 'json'
 
 $key_pat = "(?:\\w+\\.)*\\w+" # matches, e.g., foo.bar.baz or --.bar (meaning two directories up, i.e., ../../bar)
@@ -281,14 +282,56 @@ def merge_dicts(d1,d2)
   return d1.merge(d2)
 end
 
+#========================================================================================================================
 #---------- generate_code
+#========================================================================================================================
 
 def generate_code(dict,language)
-  if language=='json' then return JSON.pretty_generate(dict)+"\n" end
+  if language=='json' then
+    return JSON.pretty_generate(dict)+"\n" 
+  end
+  if language=='perl' then
+    f = Tempfile.new('tint')
+    result = nil
+    begin
+      f.print JSON.generate(dict)
+      f.close
+      # Because the following is stripped of newlines and executed as one line of perl, it can't contain comments.
+      perl = <<-"PERL"
+        use Data::Dumper;
+        use JSON;
+        local $/;
+        open(F,"<#{f.path()}") or die;
+        $x = <F>;
+        close F;
+        print Dumper(from_json($x));
+      PERL
+      perl = perl.gsub(/\n\s*/,' ')
+      c = "perl -e '#{perl}'"
+      # $stderr.print c,"\n"
+      p = %x{#{c}} # bug: how do you check for errors?
+      perl = <<-"PERL"
+        {
+          my #{p} # evaluates to my $VAR1 = "...";, which is only evaluated the first time the function is called
+          sub tint {
+            my $key = shift;
+            my $dict = $VAR1;
+            return $dict->{$key}->{'text'}->[0]->[1]; # fixme
+          }
+        }
+      PERL
+      return perl
+    ensure
+      f.unlink
+    end
+    return result
+  end
   fatal_error("Illegal language: #{language}")
 end
 
+#========================================================================================================================
 #---------- main
+#========================================================================================================================
 
 def main(opts_hash)
   language = opts_hash['--generate']
