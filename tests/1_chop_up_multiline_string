@@ -1,0 +1,4 @@
+footer_html=<<__html__
+blah
+$footer_file
+__html__

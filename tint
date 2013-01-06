@@ -97,7 +97,7 @@ def handle_text!(dict,node,dir,text)
       (k,v,rest) = [$1,$2,$3]
       v.gsub!(/(?<!\\)\\n/,"\n") # allow, e.g., foo=<<bar \n baz>>
       v = protect_dot(v)
-      merge_text_node!(dict,node+'.'+k,v) unless k=~/^__/
+      merge_text_node!(dict,node+'.'+k,v)
       process_node!(dict,node,dir,'text',rest) if rest=~/<</
     end
     # ----- a here doc -----
@@ -105,11 +105,12 @@ def handle_text!(dict,node,dir,text)
                 # [\s\S] means anything that is whitespace or isn't whitespace, i.e., any character.
                 # I don't understand why the /s doesn't allow me to do this with ., but it doesn't work.
       handled = true
-      (k,terminator,rest) = [$1,$2,$3]
-      x = rest.split(/(?<=\n)#{Regexp::quote(terminator)}/)
-      merge_text_node!(dict,node+'.'+k,protect_dot(x.shift)) unless k=~/^__/
-      rest = x.join(terminator) # we've shifted off the first element, so what's left in x is the rest of the file
-      process_node!(dict,node,dir,'text',rest) if rest=~/<</
+      (k,terminator,rest) = [$1,$2,$3] # rest includes the string itself, the terminator, and stuff after that in the file
+      x = rest.split(/(?<=\n)#{Regexp::quote(terminator)}/) # use split to avoid greedy matching
+      rhs = x.shift
+      merge_text_node!(dict,node+'.'+k,protect_dot(rhs))
+      rest_of_file = x.join(terminator) # we've shifted off the first element, so what's left in x is the rest of the file
+      process_node!(dict,node,dir,'text',rest_of_file) if rest_of_file=~/<</
     end
     # ----- a comment -----
     if !handled then
@@ -147,6 +148,7 @@ end
 # make a string like "hello, $name" into [["lit","hello, "],["ref","$name"]]
 def chop_up_string(s)
   result = []
+  # $stderr.print "chop_up_string_messy(#{s})=",chop_up_string_messy(s).join(','),"\n" # qwe
   chop_up_string_messy(s).each { |x|
     if x=~/#{$ref_pat}/ then
       result.push(["ref",x])
@@ -160,7 +162,7 @@ end
 # make a string like "hello, $name" into ["hello, ","$name"]
 # This is not meant to be called externally, only used by chop_up_string().
 def chop_up_string_messy(s)
-  if s=~/(.*)(#{$ref_pat})(.*)/ then
+  if s=~/([\s\S]*)(#{$ref_pat})([\s\S]*)/ then
     (a,b,c) = [$1,$2,$5] # ... $3 and $4 are internal to $ref_pat, and we don't need them here
     # If a or c is a null string, it gets cleaned up later by chop_up_string().
     return [chop_up_string_messy(a),b,chop_up_string_messy(c)].flatten
