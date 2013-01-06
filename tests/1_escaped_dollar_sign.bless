@@ -1,0 +1,13 @@
+{
+  "1_escaped_dollar_sign": {
+    "text": [
+      [
+        "lit",
+        "$y\n"
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

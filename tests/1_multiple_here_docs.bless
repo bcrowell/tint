@@ -1,0 +1,24 @@
+{
+  "1_multiple_here_docs.x": {
+    "text": [
+      [
+        "lit",
+        "foo\n"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_multiple_here_docs.y": {
+    "text": [
+      [
+        "lit",
+        "bar\n"
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

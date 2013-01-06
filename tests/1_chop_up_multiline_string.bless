@@ -1,0 +1,21 @@
+{
+  "1_chop_up_multiline_string.footer_html": {
+    "text": [
+      [
+        "lit",
+        "blah\n"
+      ],
+      [
+        "ref",
+        "footer_file"
+      ],
+      [
+        "lit",
+        "\n"
+      ]
+    ],
+    "args": [
+      "footer_file"
+    ]
+  }
+}

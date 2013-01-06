@@ -1,0 +1,24 @@
+{
+  "1_use_before_def.y": {
+    "text": [
+      [
+        "lit",
+        "James Bond"
+      ]
+    ],
+    "args": [
+
+    ]
+  },
+  "1_use_before_def.x": {
+    "text": [
+      [
+        "lit",
+        "Bond"
+      ]
+    ],
+    "args": [
+
+    ]
+  }
+}

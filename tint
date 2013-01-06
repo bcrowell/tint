@@ -83,11 +83,11 @@ end
 
 # helper routine for process_node!(); modifies dict
 def handle_text!(dict,node,dir,text)
-  #$stderr.print "handle_text!(#{text})\n"
+  # $stderr.print "handle_text!(#{protect_special(text)})\n" # qwe
   return if text=~/\A\s*\Z/
   if !(text=~/<</) then
     # The whole file defines a single entry.
-    merge_text_node!(dict,node,protect_dot(text))
+    merge_text_node!(dict,node,protect_special(text))
   else 
     # more than one entry in file:
     handled = false
@@ -96,7 +96,7 @@ def handle_text!(dict,node,dir,text)
       handled = true
       (k,v,rest) = [$1,$2,$3]
       v.gsub!(/(?<!\\)\\n/,"\n") # allow, e.g., foo=<<bar \n baz>>
-      v = protect_dot(v)
+      v = protect_special(v)
       merge_text_node!(dict,node+'.'+k,v)
       process_node!(dict,node,dir,'text',rest) if rest=~/<</
     end
@@ -108,7 +108,7 @@ def handle_text!(dict,node,dir,text)
       (k,terminator,rest) = [$1,$2,$3] # rest includes the string itself, the terminator, and stuff after that in the file
       x = rest.split(/(?<=\n)#{Regexp::quote(terminator)}/) # use split to avoid greedy matching
       rhs = x.shift
-      merge_text_node!(dict,node+'.'+k,protect_dot(rhs))
+      merge_text_node!(dict,node+'.'+k,protect_special(rhs))
       rest_of_file = x.join(terminator) # we've shifted off the first element, so what's left in x is the rest of the file
       process_node!(dict,node,dir,'text',rest_of_file) if rest_of_file=~/<</
     end
@@ -125,16 +125,23 @@ def handle_text!(dict,node,dir,text)
   end
 end
 
-def protect_dot(s)
-  return s.gsub(/(?<!\\)\\./,"@@@protect_dot@@@") # so we can have, e.g., <<Hello, $name\.>>; this works because
-                                                  # @ isn't a legal character in variable names
+def protect_special(s)
+  s = s.gsub(/(?<!\\)\\\./,"@@@protect_dot@@@")
+    # So we can have, e.g., <<Hello, $name\.>>. This works because
+    # @ isn't a legal character in variable names. The negative lookbehind is so that we
+    # won't do anything when the user has forced a literal backslash with \\, which happens
+    # to be followed by a .
+  s = s.gsub(/(?<!\\)\\\$/,"@@@protect_dollar@@@")
+  return s
 end
 
-def unprotect_dot(s)
-  return s.gsub(/@@@protect_dot@@@/,".")
+def unprotect_special(s)
+  s = s.gsub(/@@@protect_dot@@@/,".")
+  s = s.gsub(/@@@protect_dollar@@@/,"$")
 end
 
 def merge_text_node!(dict,node,text)
+  # $stderr.print "merge_text_node!(#{text})\n" # qwe
   args = []
   text.scan(/#{$ref_pat}/) { |sigil,x|
     args.push(x)
@@ -256,7 +263,7 @@ def clean_up_text!(text)
       # $stderr.print "in clean_up_text, ",JSON.generate(text)," ... ",JSON.generate(l),"\n"
       result.push(["lit",l[1]+x[1]])
     else
-      if x[0]=='lit' then x[1]=unprotect_dot(x[1]) end
+      if x[0]=='lit' then x[1]=unprotect_special(x[1]) end
       result.push(x) unless (x[0]=='lit' and x[1]=='')
     end
   }
