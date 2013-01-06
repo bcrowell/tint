@@ -311,6 +311,7 @@ def generate_code(dict,language)
       # $stderr.print c,"\n"
       p = %x{#{c}} # bug: how do you check for errors?
       perl = <<-"PERL"
+        # This is machine-generated code made by tint, https://github.com/bcrowell/tint .
         use strict;
         package Tint;
         use base 'Exporter';
@@ -356,11 +357,12 @@ def main(opts_hash)
   if language.nil? then language='json' end
 
   files = []
+
   ARGV.each { |f|
     fatal_error("File #{f} doesn't exist.") unless File.exist?(f)
-    files.push(f) unless File.stat(f).directory?
+    files.push(f) unless (File.stat(f).directory? or f=~/~$/)
   }
-  fatal_error("No files specified (or all files were directories).") if files.length==0
+  files.length>0 or fatal_error("No files specified (or all files were directories).")
 
   base_dir = File.dirname(files[0])
 

@@ -9,7 +9,7 @@ usage:
 
 By default the computer language for the generated code is JSON (which is
 also valid javascript). The resulting generated code is  written to stdout.
-Files that are directories are silently ignored. All files must be in the
+Files that are directories or whose names end in ~ are silently ignored. All files must be in the
 same directory, although they may refer indirectly to other files in
 subdirectories.
 
@@ -83,3 +83,5 @@ Allow absolute rather than relative addressing with `$$top.to.bottom`. This is c
 implemented syntactically, but not semantically, and hasn't been tested syntactically.
 
 Descending into subdirectories is coded, but not tested.
+
+Doesn't give error message for here doc when there's no terminator.
