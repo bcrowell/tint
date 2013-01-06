@@ -100,6 +100,7 @@ internally, serving the same purpose as "commenting out" a definition.
 # To do
 
 If a filename ends in .tint, variables inside it should be named as if the .tint didn't exist.
+Use this to make it easier to keep adding test files into git.
 
 Allow absolute rather than relative addressing with `$$top.to.bottom`. This is currently sort of
 implemented syntactically, but not semantically, and hasn't been tested syntactically.

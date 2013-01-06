@@ -25,6 +25,8 @@ $key_pat = "(?:\\w+\\.)*\\w+" # matches, e.g., foo.bar.baz or --.bar (meaning tw
 $unescaped_dollar_pat = '(?<!\\\\)\\$' # requires ruby 1.9
 $ref_pat = '((?:'+$unescaped_dollar_pat+'){1,2})('+$key_pat+')'
 
+$files_processed = [] # avoid processing the same file twice
+
 #--------- process command-line arguments
 
 def fatal_error(message)
@@ -60,6 +62,9 @@ def process_node!(
   if node_type=='file' then
     filename = node_val
     text = nil
+    path = File.expand_path(filename)
+    if $files_processed.include?(path) then return end # don't process the same file twice
+    $files_processed.push(path)
     begin
       File.open(filename,'r') { |f|
         text = f.gets(nil) # nil means read whole file
@@ -217,7 +222,7 @@ end
 # Take, e.g., a function defined by
 #   {'text'=>[["lit","Hello, "],["ref","$name"]],'args'=>['$name']}
 # and do partial application to fix $name so it's no longer an argument.
-# Both text and value are functions, not bare strings or arrays.
+# Both text and value are arrays representing functions, not bare strings or arrays.
 # There is no recursion; we just do one level of partial application.
 def interpolate_in_text!(text,ref,value)
   # $stderr.print "interpolating text=#{text},ref=#{ref},value=#{value}\n"
@@ -284,8 +289,9 @@ def merge_dicts(d1,d2)
       j2 = JSON.generate(d2[x])
       if j1!=j2 then # kludge, JSON may not be canonicalized
         $stderr.print "key redefined: #{x}\n"
-        $stderr.print j1,"\n"
-        $stderr.print j2,"\n"
+        $stderr.print "was:           ",j1,"\n"
+        $stderr.print "redefined to:  ",j2,"\n"
+        # $stderr.print caller.join("\n"),"\n"; # stack trace, for debugging
         fatal_error("The following keys were multiply defined: #{redefined.to_a.join(' ')}")
     end
     }
@@ -328,7 +334,7 @@ def generate_code(dict,language)
         use base 'Exporter';
         our @EXPORT_OK = ('tint');
         {
-          my #{p} # evaluates to my $VAR1 = "...";, which is only evaluated the first time the function is called
+          my #{p} # evaluates to my $VAR1 = "...";, which is only evaluated when the module is first imported
           sub tint {
             my $key = shift;
             my %args = @_;
@@ -343,7 +349,7 @@ def generate_code(dict,language)
                 $result = $result . $x->[1];
               }
               else {
-                $result = $result . tint($x->[0],%args);
+                $result = $result . $args{$x->[1]};
               }
             }
             return $result;
